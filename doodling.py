@@ -8,7 +8,7 @@ class Application(tk.Frame):
     canvas_width=500
     canvas_height=canvas_width
     canvas_centre = [canvas_width/2, canvas_height/2]
-    initial_size = 50
+    initial_size = 100
     def __init__(self, master=None):
         super(Application, self).__init__(master)
         self.pack()
@@ -19,7 +19,7 @@ class Application(tk.Frame):
         self.canvas.pack()
         self.quitButton = tk.Button(self, text='Exit', command=self.quit)
         self.quitButton.pack()
-        self.slider = tk.Scale(self, from_=0, to=256, orient="horizontal")
+        self.slider = tk.Scale(self, from_=self.initial_size, to=self.initial_size+100, orient="horizontal", length=490)
         self.slider.bind("<ButtonRelease-1>", self.response)
         self.slider.pack()
 
@@ -104,12 +104,11 @@ class Application(tk.Frame):
         # Create T1 and place it at the centre of the canvas with fixed size, initial_size
         T1 = self.translate_triangle(
             self.dilate_triangle( self.unit_triangle(),
-                [self.initial_size, self.initial_size]), self.canvas_centre)
+                [self.initial_size, self.initial_size]), [self.canvas_centre[0]*1.5, self.canvas_centre[1]])
 
         # Now, for T2, use a dilate origin set to the lower right corner (?really)
         T2 = T1
         T2 = self.dilate_triangle(T2, [size/self.initial_size, size/self.initial_size], T2[1])
-        # Next, effect a reflection along the lower axis (?really)...
         T2 = self.translate_triangle(self.reflect_x_triangle(self.translate_triangle(T2, [0,-T2[1][1]])), [0,T2[1][1]])
 
         T3 = T2
@@ -120,7 +119,6 @@ class Application(tk.Frame):
         self.render_triangle(T1)
         self.render_triangle(T2)
         self.render_triangle(T3)
-
 
 app=Application()
 app.master.title('Doodling')
