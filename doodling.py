@@ -5,34 +5,31 @@ import random as rnd
 # Borrowing the oo approach from the Wikipedia example
 class Application(tk.Frame):
 
+    canvas_width=500
+    canvas_height=canvas_width
+    canvas_centre = [canvas_width/2, canvas_height/2]
+    initial_size = 50
     def __init__(self, master=None):
         super(Application, self).__init__(master)
         self.pack()
         self.createWidgets()
 
     def createWidgets(self):
-        canvas_width=500
-        canvas_height=canvas_width
-        self.canvas = tk.Canvas(self,width=canvas_width, height=canvas_height)
+        self.canvas = tk.Canvas(self,width=self.canvas_width, height=self.canvas_height)
         self.canvas.pack()
         self.quitButton = tk.Button(self, text='Exit', command=self.quit)
         self.quitButton.pack()
+        self.slider = tk.Scale(self, from_=0, to=256, orient="horizontal")
+        self.slider.bind("<ButtonRelease-1>", self.response)
+        self.slider.pack()
 
-    def unit_triangle():
-       # the_points are A: 0,0, B: 1,0, C: 0,1
-       A = [0, 0]
-       B = [1, 0]
-       C = [0, 1]
-       #  return the_points
-       return [ A, B, C ]
-
-    def render_triangle(triangle=unit_triangle()):
+    def render_triangle(self, triangle):
         # render a triangle
         self.canvas.create_line(triangle[0][0],triangle[0][1],triangle[1][0],triangle[1][1])
         self.canvas.create_line(triangle[1][0],triangle[1][1],triangle[2][0],triangle[2][1])
         self.canvas.create_line(triangle[2][0],triangle[2][1],triangle[0][0],triangle[0][1])
 
-    def translate_triangle(triangle=unit_triangle(), translation=[0,0]):
+    def translate_triangle(self, triangle, translation=[0,0]):
         # translate it
         return [
             [triangle[0][0] + translation[0], triangle[0][1] + translation[1]],
@@ -40,15 +37,17 @@ class Application(tk.Frame):
             [triangle[2][0] + translation[0], triangle[2][1] + translation[1]]
             ]
 
-    def dilate_triangle(triangle=unit_triangle(), dilation=[1,1]):
-        # dilate it relative to the viewport origin
-        return [
-            [triangle[0][0] * dilation[0], triangle[0][1] * dilation[1]],
-            [triangle[1][0] * dilation[0], triangle[1][1] * dilation[1]],
-            [triangle[2][0] * dilation[0], triangle[2][1] * dilation[1]]
-            ]
+    def dilate_triangle(self, triangle, dilation=[1,1], dilate_origin=[0,0]):
+        if dilate_origin == [0,0]:
+            return [
+                [triangle[0][0] * dilation[0], triangle[0][1] * dilation[1]],
+                [triangle[1][0] * dilation[0], triangle[1][1] * dilation[1]],
+                [triangle[2][0] * dilation[0], triangle[2][1] * dilation[1]]
+                ]
+        else:
+            return self.translate_triangle(self.dilate_triangle(self.translate_triangle(triangle, [-dilate_origin[0], -dilate_origin[1]]), dilation), dilate_origin)
 
-    def rotate_triangle(triangle=unit_triangle(), rotate=1, rotate_origin=[0,0]):
+    def rotate_triangle(self, triangle, rotate=1, rotate_origin=[0,0]):
         # rotate it -- around the origin (Modify this to rotate around any specified point)
         # this will be no "general" rotation, but instead it will be specifically a quarter turn
         # it will be a quarter turn multiplied by 1, 2 or 3.
@@ -61,9 +60,9 @@ class Application(tk.Frame):
                     [triangle[2][1] * -1, triangle[2][0] * 1]
                     ]
             elif rotate==2:
-                return rotate_triangle(rotate_triangle(triangle, 1, rotate_origin), 1, rotate_origin)
+                return self.rotate_triangle(self.rotate_triangle(triangle, 1, rotate_origin), 1, rotate_origin)
             elif rotate==3:
-                return rotate_triangle(rotate_triangle(triangle, 1, rotate_origin), 2, rotate_origin)
+                return self.rotate_triangle(self.rotate_triangle(triangle, 1, rotate_origin), 2, rotate_origin)
             else:
                 # do nothing to the input triangle; probably this should be flagged in a log
                 return triangle
@@ -71,64 +70,58 @@ class Application(tk.Frame):
             # translate the object to the origin by inverting the rotate rotate_origin
             # rotate around the origin
             # translate the object back to it's position by undoing the previous translattion
-            return translate_triangle(rotate_triangle(translate_triangle(triangle, [-rotate_origin[0], -rotate_origin[1]]), rotate), rotate_origin)
+            return self.translate_triangle(self.rotate_triangle(self.translate_triangle(triangle, [-rotate_origin[0], -rotate_origin[1]]), rotate), rotate_origin)
+
+    def reflect_x_triangle(self, triangle):
+        # Reflect in the x-axis
+        return [
+            [triangle[0][0], triangle[0][1] * -1],
+            [triangle[1][0], triangle[1][1] * -1],
+            [triangle[2][0], triangle[2][1] * -1]
+            ]
+
+    def reflect_y_triangle(self, triangle):
+        # Reflect in the x-axis
+        return [
+            [triangle[0][0] * -1, triangle[0][1]],
+            [triangle[1][0] * -1, triangle[1][1]],
+            [triangle[2][0] * -1, triangle[2][1]]
+            ]
+
+    def unit_triangle(self):
+       # the_points are A: 0,0, B: 1,0, C: 0,1
+       A = [0, 0]
+       B = [1, 0]
+       C = [0, 1]
+       #  return the_points
+       return [ A, B, C ]
+
+    def response(self, event):
+
+        size = self.slider.get()
+        if size < self.initial_size :
+            size = self.initial_size
+        # Create T1 and place it at the centre of the canvas with fixed size, initial_size
+        T1 = self.translate_triangle(
+            self.dilate_triangle( self.unit_triangle(),
+                [self.initial_size, self.initial_size]), self.canvas_centre)
+
+        # Now, for T2, use a dilate origin set to the lower right corner (?really)
+        T2 = T1
+        T2 = self.dilate_triangle(T2, [size/self.initial_size, size/self.initial_size], T2[1])
+        # Next, effect a reflection along the lower axis (?really)...
+        T2 = self.translate_triangle(self.reflect_x_triangle(self.translate_triangle(T2, [0,-T2[1][1]])), [0,T2[1][1]])
+
+        T3 = T2
+        T3 = self.dilate_triangle(T3, [size/self.initial_size, size/self.initial_size], T3[2])
+        T3 = self.translate_triangle(self.reflect_y_triangle(self.translate_triangle(T3, [-T3[2][0],0])), [T3[2][0],0])
+
+        self.canvas.delete("all")
+        self.render_triangle(T1)
+        self.render_triangle(T2)
+        self.render_triangle(T3)
+
 
 app=Application()
 app.master.title('Doodling')
 app.mainloop()
-"""
-T=[[5,5],[100, 5],[5, 100]]
-render_triangle(T)
-render_triangle(rotate_triangle(dilate_triangle(T, [1.3,1.1]), 1, [120, 120]))
-render_triangle(rotate_triangle(dilate_triangle(T, [1.6,1.2]), 2, [120, 120]))
-render_triangle(rotate_triangle(dilate_triangle(T, [1.9,1.3]), 3, [120, 120]))
-"""
-
-"""
-###
-
-def arb_triangle():
-   # the_points are NOT A: 0,0, B: 1,0, C: 0,1
-   A = [5, 5]
-   B = [150, 5]
-   C = [5, 150]
-   #  return the_points
-   return [ A, B, C ]
-
-print(unit_triangle())
-print("1:", unit_triangle()[0])
-print("2:", unit_triangle()[1])
-print("3:", 100*unit_triangle()[2][0], 100*unit_triangle()[2][1])
-print("The unit Triangle,", unit_triangle())
-print("The unit Triangle, rotated 1 quarter turns: ", rotate_triangle(unit_triangle(), 1, [0,0]))
-print("The unit Triangle, rotated 2 quarter turns: ", rotate_triangle(unit_triangle(), 2, [0,0]))
-print("The unit Triangle, rotated 3 quarter turns: ", rotate_triangle(unit_triangle(), 3, [0,0]))
-render_triangle([[5,5],[100, 5],[5, 100]])
-
-# I would like to render many random triangles.
-seed(1)
-
-# NOTE: randint(0, canvas_width) -- does the "obvious"... right?
-def totally_random():
-    for i in range(10):
-        render_triangle([
-            [randint(0, canvas_width), randint(0, canvas_height)],
-            [randint(0, canvas_width), randint(0, canvas_height)],
-            [randint(0, canvas_width), randint(0, canvas_height)]])
-
-
-def arbitrary_xforms():
-    # dilation
-    render_triangle(dilate_triangle(translate_triangle(arb_triangle(), [100, 100]), [2,2]))
-    render_triangle(dilate_triangle(translate_triangle(arb_triangle(), [100, 150]), [3,3]))
-    # translation
-    render_triangle(translate_triangle(rotate_triangle(arb_triangle()), [150, 100]))
-    render_triangle(translate_triangle(arb_triangle(), [150, 150]))
-
-# totally_random()
-arbitrary_xforms()
-###
-"""
-
-# So that's the random triangles. But what about some other triangles. Less random?
-# Starting with a single, small right-angle triangle in the middle.
