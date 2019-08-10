@@ -115,10 +115,15 @@ class Application(tk.Frame):
         T3 = self.dilate_triangle(T3, [size/self.initial_size, size/self.initial_size], T3[2])
         T3 = self.translate_triangle(self.reflect_y_triangle(self.translate_triangle(T3, [-T3[2][0],0])), [T3[2][0],0])
 
+        T4 = T3
+        T4 = self.dilate_triangle(T4, [size/self.initial_size, size/self.initial_size], T4[1])
+        T4 = self.translate_triangle(self.reflect_x_triangle(self.translate_triangle(T4, [0,-T4[1][1]])), [0,T4[1][1]])
+
         self.canvas.delete("all")
         self.render_triangle(T1)
         self.render_triangle(T2)
         self.render_triangle(T3)
+        self.render_triangle(T4)
 
 app=Application()
 app.master.title('Doodling')
