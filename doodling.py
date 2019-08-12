@@ -5,10 +5,11 @@ import random as rnd
 # Borrowing the oo approach from the Wikipedia example
 class Application(tk.Frame):
 
-    canvas_width=500
+    canvas_width=600
     canvas_height=canvas_width
     canvas_centre = [canvas_width/2, canvas_height/2]
-    initial_size = 100
+    slider_start = 1001
+    slider_end = 2000
     def __init__(self, master=None):
         super(Application, self).__init__(master)
         self.pack()
@@ -19,7 +20,7 @@ class Application(tk.Frame):
         self.canvas.pack()
         self.quitButton = tk.Button(self, text='Exit', command=self.quit)
         self.quitButton.pack()
-        self.slider = tk.Scale(self, from_=self.initial_size, to=self.initial_size+100, orient="horizontal", length=490)
+        self.slider = tk.Scale(self, from_=slider_start, to=slider_end, orient="horizontal", length=self.canvas_width)
         self.slider.bind("<ButtonRelease-1>", self.response)
         self.slider.pack()
 
@@ -72,6 +73,17 @@ class Application(tk.Frame):
             # translate the object back to it's position by undoing the previous translattion
             return self.translate_triangle(self.rotate_triangle(self.translate_triangle(triangle, [-rotate_origin[0], -rotate_origin[1]]), rotate), rotate_origin)
 
+    def nreflect_x_triangle(self, triangle, y_offset):
+        # Reflect in the x-axis, offsettinb by y_offset if necessary
+        triangle=self.translate_triangle(triangle, [0,-y_offset])
+        triangle = [
+            [triangle[0][0], triangle[0][1] * -1],
+            [triangle[1][0], triangle[1][1] * -1],
+            [triangle[2][0], triangle[2][1] * -1]
+            ]
+        triangle=self.translate_triangle(triangle, [0,y_offset])
+        return triangle
+
     def reflect_x_triangle(self, triangle):
         # Reflect in the x-axis
         return [
@@ -97,33 +109,41 @@ class Application(tk.Frame):
        return [ A, B, C ]
 
     def response(self, event):
+        # reminder: slider returns values between 1001 and 2000 hence,
+        # size will be between about a fifth of the canvas width and
+        # the full width (or more)
+        size = self.slider.get() / 1000
+        size = self.canvas_width/5 + self.canvas_width * size
+        base_dilation = [self.canvas_width/5, self.canvas_width/5]
+        dilation = [size, size]
 
-        size = self.slider.get()
-        if size < self.initial_size :
-            size = self.initial_size
-        # Create T1 and place it at the centre of the canvas with fixed size, initial_size
         T1 = self.translate_triangle(
-            self.dilate_triangle( self.unit_triangle(),
-                [self.initial_size, self.initial_size]), [self.canvas_centre[0]*1.5, self.canvas_centre[1]])
+            self.dilate_triangle( self.unit_triangle(), base_dilation ),
+                [self.canvas_centre[0]*1.5, self.canvas_centre[1]])
 
         # Now, for T2, use a dilate origin set to the lower right corner (?really)
         T2 = T1
-        T2 = self.dilate_triangle(T2, [size/self.initial_size, size/self.initial_size], T2[1])
-        T2 = self.translate_triangle(self.reflect_x_triangle(self.translate_triangle(T2, [0,-T2[1][1]])), [0,T2[1][1]])
+        T2 = self.dilate_triangle(T2, dilation, T2[1])
+        T2 = self.nreflect_x_triangle(T2, T2[1][1])
 
         T3 = T2
-        T3 = self.dilate_triangle(T3, [size/self.initial_size, size/self.initial_size], T3[2])
+        T3 = self.dilate_triangle(T3, dilation, T3[2])
         T3 = self.translate_triangle(self.reflect_y_triangle(self.translate_triangle(T3, [-T3[2][0],0])), [T3[2][0],0])
 
         T4 = T3
-        T4 = self.dilate_triangle(T4, [size/self.initial_size, size/self.initial_size], T4[1])
+        T4 = self.dilate_triangle(T4, dilation, T4[1])
         T4 = self.translate_triangle(self.reflect_x_triangle(self.translate_triangle(T4, [0,-T4[1][1]])), [0,T4[1][1]])
+
+        T5 = T4
+        T5 = self.dilate_triangle(T5, dilation, T5[2])
+        T5 = self.translate_triangle(self.reflect_y_triangle(self.translate_triangle(T5, [-T5[2][0],0])), [T5[2][0],0])
 
         self.canvas.delete("all")
         self.render_triangle(T1)
         self.render_triangle(T2)
         self.render_triangle(T3)
         self.render_triangle(T4)
+        self.render_triangle(T5)
 
 app=Application()
 app.master.title('Doodling')
