@@ -19,7 +19,7 @@ class Application(tk.Frame):
         self.canvas.pack()
         self.quitButton = tk.Button(self, text='Exit', command=self.quit)
         self.quitButton.pack()
-        self.slider = tk.Scale(self, from_=self.initial_size, to=self.initial_size+100, orient="horizontal", length=490)
+        self.slider = tk.Scale(self, from_=1000, to=2000, orient="horizontal", length=self.canvas_width)
         self.slider.bind("<ButtonRelease-1>", self.response)
         self.slider.pack()
 
@@ -72,21 +72,24 @@ class Application(tk.Frame):
             # translate the object back to it's position by undoing the previous translattion
             return self.translate_triangle(self.rotate_triangle(self.translate_triangle(triangle, [-rotate_origin[0], -rotate_origin[1]]), rotate), rotate_origin)
 
-    def reflect_x_triangle(self, triangle):
-        # Reflect in the x-axis
-        return [
-            [triangle[0][0], triangle[0][1] * -1],
-            [triangle[1][0], triangle[1][1] * -1],
-            [triangle[2][0], triangle[2][1] * -1]
-            ]
-
-    def reflect_y_triangle(self, triangle):
-        # Reflect in the x-axis
-        return [
-            [triangle[0][0] * -1, triangle[0][1]],
-            [triangle[1][0] * -1, triangle[1][1]],
-            [triangle[2][0] * -1, triangle[2][1]]
-            ]
+    def reflect_triangle(self, triangle, offset=0, axis='X'):
+        if axis == 'X' or axis == 'x':
+            triangle = self.translate_triangle(triangle, [0,-offset])
+            triangle = [
+                [triangle[0][0], triangle[0][1] * -1],
+                [triangle[1][0], triangle[1][1] * -1],
+                [triangle[2][0], triangle[2][1] * -1]
+                ]
+            triangle = self.translate_triangle(triangle, [0,offset])
+        else: # Assume "Y" intead
+            triangle = self.translate_triangle(triangle, [-offset,0])
+            triangle = [
+                [triangle[0][0] * -1, triangle[0][1]],
+                [triangle[1][0] * -1, triangle[1][1]],
+                [triangle[2][0] * -1, triangle[2][1]]
+                ]
+            triangle = self.translate_triangle(triangle, [offset,0])
+        return triangle
 
     def unit_triangle(self):
        # the_points are A: 0,0, B: 1,0, C: 0,1
@@ -99,6 +102,7 @@ class Application(tk.Frame):
     def response(self, event):
 
         size = self.slider.get()
+        size = size / 10
         if size < self.initial_size :
             size = self.initial_size
         # Create T1 and place it at the centre of the canvas with fixed size, initial_size
@@ -109,15 +113,15 @@ class Application(tk.Frame):
         # Now, for T2, use a dilate origin set to the lower right corner (?really)
         T2 = T1
         T2 = self.dilate_triangle(T2, [size/self.initial_size, size/self.initial_size], T2[1])
-        T2 = self.translate_triangle(self.reflect_x_triangle(self.translate_triangle(T2, [0,-T2[1][1]])), [0,T2[1][1]])
+        T2 = self.reflect_triangle(T2, offset=T2[1][1], axis='X')
 
         T3 = T2
         T3 = self.dilate_triangle(T3, [size/self.initial_size, size/self.initial_size], T3[2])
-        T3 = self.translate_triangle(self.reflect_y_triangle(self.translate_triangle(T3, [-T3[2][0],0])), [T3[2][0],0])
+        T3 = self.reflect_triangle(T3, offset=T3[2][0], axis='Y')
 
         T4 = T3
         T4 = self.dilate_triangle(T4, [size/self.initial_size, size/self.initial_size], T4[1])
-        T4 = self.translate_triangle(self.reflect_x_triangle(self.translate_triangle(T4, [0,-T4[1][1]])), [0,T4[1][1]])
+        T4 = self.reflect_triangle(T4, offset=T4[1][1], axis='X')
 
         self.canvas.delete("all")
         self.render_triangle(T1)
