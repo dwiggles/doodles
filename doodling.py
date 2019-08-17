@@ -8,7 +8,8 @@ class Application(tk.Frame):
     canvas_width=500
     canvas_height=canvas_width
     canvas_centre = [canvas_width/2, canvas_height/2]
-    initial_size = 100
+    slider_start = 1000
+    slider_end = 2000
     def __init__(self, master=None):
         super(Application, self).__init__(master)
         self.pack()
@@ -19,7 +20,7 @@ class Application(tk.Frame):
         self.canvas.pack()
         self.quitButton = tk.Button(self, text='Exit', command=self.quit)
         self.quitButton.pack()
-        self.slider = tk.Scale(self, from_=1000, to=2000, orient="horizontal", length=self.canvas_width)
+        self.slider = tk.Scale(self, from_=self.slider_start, to=self.slider_end, orient="horizontal", length=self.canvas_width)
         self.slider.bind("<ButtonRelease-1>", self.response)
         self.slider.pack()
 
@@ -64,7 +65,7 @@ class Application(tk.Frame):
             elif rotate==3:
                 return self.rotate_triangle(self.rotate_triangle(triangle, 1, rotate_origin), 2, rotate_origin)
             else:
-                # do nothing to the input triangle; probably this should be flagged in a log
+                # do nothing; probably this should be flagged in a log
                 return triangle
         else:
             # translate the object to the origin by inverting the rotate rotate_origin
@@ -100,34 +101,35 @@ class Application(tk.Frame):
        return [ A, B, C ]
 
     def response(self, event):
-
+        # This function is invoked by releasing the slider
         size = self.slider.get()
-        size = size / 10
-        if size < self.initial_size :
-            size = self.initial_size
-        # Create T1 and place it at the centre of the canvas with fixed size, initial_size
-        T1 = self.translate_triangle(
-            self.dilate_triangle( self.unit_triangle(),
-                [self.initial_size, self.initial_size]), [self.canvas_centre[0]*1.5, self.canvas_centre[1]])
 
-        # Now, for T2, use a dilate origin set to the lower right corner (?really)
-        T2 = T1
-        T2 = self.dilate_triangle(T2, [size/self.initial_size, size/self.initial_size], T2[1])
-        T2 = self.reflect_triangle(T2, offset=T2[1][1], axis='X')
+        def recursive_construction(N):
+            initial_size = [30,30]
+            dilation_factor = [(size/self.slider_start), size/self.slider_start]
 
-        T3 = T2
-        T3 = self.dilate_triangle(T3, [size/self.initial_size, size/self.initial_size], T3[2])
-        T3 = self.reflect_triangle(T3, offset=T3[2][0], axis='Y')
+            if N == 1:
+                self.canvas.delete("all")
 
-        T4 = T3
-        T4 = self.dilate_triangle(T4, [size/self.initial_size, size/self.initial_size], T4[1])
-        T4 = self.reflect_triangle(T4, offset=T4[1][1], axis='X')
+                T = self.dilate_triangle(self.unit_triangle(), initial_size)
+                T = self.translate_triangle(T, [self.canvas_centre[0]*1.5, self.canvas_centre[1]])
+                self.render_triangle(T)
+            else:
+                T=recursive_construction(N-1)
+                if N % 2 == 0:  #even
+                    T = self.dilate_triangle(T, dilation_factor, T[1])
+                    T = self.reflect_triangle(T, offset=T[1][1], axis='X')
+                else: #odd
+                    T = self.dilate_triangle(T, dilation_factor, T[2])
+                    T = self.reflect_triangle(T, offset=T[2][0], axis='Y')
+                self.render_triangle(T)
 
-        self.canvas.delete("all")
-        self.render_triangle(T1)
-        self.render_triangle(T2)
-        self.render_triangle(T3)
-        self.render_triangle(T4)
+            # Notice that in the base case, the returned value is not processed.
+	        # Maybe indent this???
+            return T
+
+        #recursive_construction(500)
+        recursive_construction(15)
 
 app=Application()
 app.master.title('Doodling')
