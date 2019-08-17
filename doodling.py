@@ -8,8 +8,15 @@ class Application(tk.Frame):
     canvas_width=500
     canvas_height=canvas_width
     canvas_centre = [canvas_width/2, canvas_height/2]
-    slider_start = 1000
-    slider_end = 2000
+
+    slider_dilation_start = 1000
+    slider_dilation_end = 2000
+    slider_dilation_length=slider_dilation_end-slider_dilation_start
+
+    slider_initital_size_start= 2
+    slider_initial_size_end = 200
+    slider_initial_size_length=slider_initial_size_end-slider_initital_size_start
+
     def __init__(self, master=None):
         super(Application, self).__init__(master)
         self.pack()
@@ -18,11 +25,17 @@ class Application(tk.Frame):
     def createWidgets(self):
         self.canvas = tk.Canvas(self,width=self.canvas_width, height=self.canvas_height)
         self.canvas.pack()
+        # Switching Mac from "Dark Mode" to "Light Mode" "solves" a problem with the Button
         self.quitButton = tk.Button(self, text='Exit', command=self.quit)
         self.quitButton.pack()
-        self.slider = tk.Scale(self, from_=self.slider_start, to=self.slider_end, orient="horizontal", length=self.canvas_width)
-        self.slider.bind("<ButtonRelease-1>", self.response)
-        self.slider.pack()
+
+        self.slider_dilation = tk.Scale(self, from_=self.slider_dilation_start, to=self.slider_dilation_end, orient="horizontal", length=self.canvas_width)
+        self.slider_dilation.bind("<ButtonRelease-1>", self.response)
+        self.slider_dilation.pack()
+
+        self.slider_initial_size = tk.Scale(self, from_=self.slider_initital_size_start, to=self.slider_initial_size_end, orient="horizontal", length=self.canvas_width)
+        self.slider_initial_size.bind("<ButtonRelease-1>", self.response)
+        self.slider_initial_size.pack()
 
     def render_triangle(self, triangle):
         # render a triangle
@@ -101,12 +114,13 @@ class Application(tk.Frame):
        return [ A, B, C ]
 
     def response(self, event):
-        # This function is invoked by releasing the slider
-        size = self.slider.get()
+        # This function is invoked by releasing the slider_dilation
+        size = self.slider_dilation.get()
+        initial_size_scalar = self.slider_initial_size.get()
 
         def recursive_construction(N):
-            initial_size = [30,30]
-            dilation_factor = [(size/self.slider_start), size/self.slider_start]
+            initial_size = [initial_size_scalar, initial_size_scalar]
+            dilation_factor = [(size/self.slider_dilation_length), (size/self.slider_dilation_length)]
 
             if N == 1:
                 self.canvas.delete("all")
