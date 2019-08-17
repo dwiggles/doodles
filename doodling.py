@@ -17,6 +17,10 @@ class Application(tk.Frame):
     slider_initial_size_end = 200
     slider_initial_size_length=slider_initial_size_end-slider_initital_size_start
 
+    slider_N_triangles_start= 1
+    slider_N_triangles_end = 500
+    slider_N_triangles_length=slider_N_triangles_end-slider_N_triangles_start
+
     def __init__(self, master=None):
         super(Application, self).__init__(master)
         self.pack()
@@ -36,6 +40,10 @@ class Application(tk.Frame):
         self.slider_initial_size = tk.Scale(self, from_=self.slider_initital_size_start, to=self.slider_initial_size_end, orient="horizontal", length=self.canvas_width)
         self.slider_initial_size.bind("<ButtonRelease-1>", self.response)
         self.slider_initial_size.pack()
+
+        self.slider_N_triangles = tk.Scale(self, from_=self.slider_initital_size_start, to=self.slider_N_triangles_end, orient="horizontal", length=self.canvas_width)
+        self.slider_N_triangles.bind("<ButtonRelease-1>", self.response)
+        self.slider_N_triangles.pack()
 
     def render_triangle(self, triangle):
         # render a triangle
@@ -143,7 +151,8 @@ class Application(tk.Frame):
             return T
 
         #recursive_construction(500)
-        recursive_construction(15)
+        N_triangles = self.slider_N_triangles.get()
+        recursive_construction(N_triangles)
 
 app=Application()
 app.master.title('Doodling')
