@@ -2,11 +2,9 @@
 import tkinter as tk
 import random as rnd
 
-# Borrowing the oo approach from the Wikipedia example
 class Application(tk.Frame):
 
     canvas_width=500
-    #canvas_height=canvas_width
     canvas_height=400
     canvas_centre = [canvas_width/2, canvas_height/2]
 
@@ -39,14 +37,10 @@ class Application(tk.Frame):
 
         self.slider_dilation = tk.Scale(self, from_=self.slider_dilation_start, to=self.slider_dilation_end, orient="horizontal", length=self.canvas_width/2, label="Growth Rate", resolution=0.001)
         self.slider_dilation.set(1)
-        #self.slider_dilation.bind("<B1-Motion>", self.response_dilation_high_res)
-        #self.slider_dilation.bind("<ButtonRelease-1>", self.response_dilation_high_res)
         self.slider_dilation.bind("<B1-Motion>", self.response)
         self.slider_dilation.bind("<ButtonRelease-1>", self.response)
 
         self.slider_dilation_point1 = tk.Scale(self, from_=self.slider_dilation_start, to=self.slider_dilation_end, orient="horizontal", length=self.canvas_width/2, label="Growth Rate step=0.1", resolution=0.1)
-        #self.slider_dilation_point1.bind("<B1-Motion>", self.response_dilation_point1_res)
-        #self.slider_dilation_point1.bind("<ButtonRelease-1>", self.response_dilation_point1_res)
 
         self.slider_initial_size = tk.Scale(self, from_=self.slider_initital_size_start, to=self.slider_initial_size_end, orient="horizontal", length=self.canvas_width/2, label="Starting Size")
         self.slider_initial_size.set(50)
@@ -59,19 +53,16 @@ class Application(tk.Frame):
         self.slider_N_triangles.bind("<ButtonRelease-1>", self.response)
 
         self.slider_dilation.pack()
-        #self.slider_dilation_point1.pack()
         self.slider_initial_size.pack()
         self.slider_N_triangles.pack()
         self.quitButton.pack()
 
     def render_triangle(self, triangle):
-        # render a triangle
         self.canvas.create_line(triangle[0][0],triangle[0][1],triangle[1][0],triangle[1][1])
         self.canvas.create_line(triangle[1][0],triangle[1][1],triangle[2][0],triangle[2][1])
         self.canvas.create_line(triangle[2][0],triangle[2][1],triangle[0][0],triangle[0][1])
 
     def translate_triangle(self, triangle, translation=[0,0]):
-        # translate it
         return [
             [triangle[0][0] + translation[0], triangle[0][1] + translation[1]],
             [triangle[1][0] + translation[0], triangle[1][1] + translation[1]],
@@ -133,11 +124,9 @@ class Application(tk.Frame):
         return triangle
 
     def unit_triangle(self):
-       # the_points are A: 0,0, B: 1,0, C: 0,1
        A = [0, 0]
        B = [1, 0]
        C = [0, 1]
-       #  return the_points
        return [ A, B, C ]
 
     def response_dilation_high_res(self, event):
@@ -148,8 +137,6 @@ class Application(tk.Frame):
         size = self.slider_dilation_point1.get()
         self.response(event)
 
-    # Attention future self: Should this (recursive_construction) really be defined INSIDE "response()"
-    #recursive_construction(N_triangles, size=size, initial_size_scalar=initial_size_scalar)
     def recursive_construction(self, N, size, initial_size_scalar):
         initial_size = [initial_size_scalar, initial_size_scalar]
         dilation_factor = [(size/(self.slider_dilation_length/self.slider_dilation_denominator)), (size/(self.slider_dilation_length/self.slider_dilation_denominator))]
@@ -170,7 +157,6 @@ class Application(tk.Frame):
                 T = self.reflect_triangle(T, offset=T[2][0], axis='Y')
             self.render_triangle(T)
         # Notice that in the base case, the returned value is not processed.
-	    # Maybe indent this???
         return T
 
     def response(self, event):
