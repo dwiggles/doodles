@@ -4,10 +4,9 @@ import random as rnd
 
 class Application(tk.Frame):
 
-    canvas_width=500
-    canvas_height=400
+    canvas_width=900
+    canvas_height=500
     canvas_centre = [canvas_width/2, canvas_height/2]
-
 
     slider_dilation_start = 0
     slider_dilation_end = 2
@@ -16,11 +15,11 @@ class Application(tk.Frame):
     slider_dilation_denominator=2
 
     slider_initital_size_start= 1
-    slider_initial_size_end = 100
+    slider_initial_size_end = 130
     slider_initial_size_length=slider_initial_size_end-slider_initital_size_start
 
     slider_N_triangles_start= 1
-    slider_N_triangles_end = 100
+    slider_N_triangles_end = 20
     slider_N_triangles_length=slider_N_triangles_end-slider_N_triangles_start
 
     def __init__(self, master=None):
@@ -31,31 +30,31 @@ class Application(tk.Frame):
 
     def createWidgets(self):
         self.canvas = tk.Canvas(self,width=self.canvas_width, height=self.canvas_height)
-        self.canvas.pack()
         # Switching Mac from "Dark Mode" to "Light Mode" "solves" a problem with the Button
         self.quitButton = tk.Button(self, text='Exit', command=self.quit)
 
-        self.slider_dilation = tk.Scale(self, from_=self.slider_dilation_start, to=self.slider_dilation_end, orient="horizontal", length=self.canvas_width/2, label="Growth Rate", resolution=0.001)
+        self.slider_dilation = tk.Scale(self, from_=self.slider_dilation_start, to=self.slider_dilation_end, orient="horizontal", length=self.canvas_width*0.9, label="Growth Rate", resolution=0.001)
         self.slider_dilation.set(1)
         self.slider_dilation.bind("<B1-Motion>", self.response)
         self.slider_dilation.bind("<ButtonRelease-1>", self.response)
 
-        self.slider_dilation_point1 = tk.Scale(self, from_=self.slider_dilation_start, to=self.slider_dilation_end, orient="horizontal", length=self.canvas_width/2, label="Growth Rate step=0.1", resolution=0.1)
+        self.slider_dilation_point1 = tk.Scale(self, from_=self.slider_dilation_start, to=self.slider_dilation_end, orient="horizontal", length=self.canvas_width*0.5, label="Growth Rate step=0.1", resolution=0.1)
 
-        self.slider_initial_size = tk.Scale(self, from_=self.slider_initital_size_start, to=self.slider_initial_size_end, orient="horizontal", length=self.canvas_width/2, label="Starting Size")
+        self.slider_initial_size = tk.Scale(self, from_=self.slider_initital_size_start, to=self.slider_initial_size_end, orient="horizontal", length=self.canvas_width*0.5, label="Starting Size")
         self.slider_initial_size.set(50)
         self.slider_initial_size.bind("<B1-Motion>", self.response)
         self.slider_initial_size.bind("<ButtonRelease-1>", self.response)
 
-        self.slider_N_triangles = tk.Scale(self, from_=self.slider_initital_size_start, to=self.slider_N_triangles_end, orient="horizontal", length=self.canvas_width/2, label="N")
+        self.slider_N_triangles = tk.Scale(self, from_=self.slider_initital_size_start, to=self.slider_N_triangles_end, orient="horizontal", length=self.canvas_width*0.5, label="N")
         self.slider_N_triangles.set(2)
         self.slider_N_triangles.bind("<B1-Motion>", self.response)
         self.slider_N_triangles.bind("<ButtonRelease-1>", self.response)
 
+        self.quitButton.pack()
+        self.canvas.pack()
         self.slider_dilation.pack()
         self.slider_initial_size.pack()
         self.slider_N_triangles.pack()
-        self.quitButton.pack()
 
     def render_triangle(self, triangle):
         self.canvas.create_line(triangle[0][0],triangle[0][1],triangle[1][0],triangle[1][1])
@@ -78,31 +77,6 @@ class Application(tk.Frame):
                 ]
         else:
             return self.translate_triangle(self.dilate_triangle(self.translate_triangle(triangle, [-dilate_origin[0], -dilate_origin[1]]), dilation), dilate_origin)
-
-    def rotate_triangle(self, triangle, rotate=1, rotate_origin=[0,0]):
-        # rotate it -- around the origin (Modify this to rotate around any specified point)
-        # this will be no "general" rotation, but instead it will be specifically a quarter turn
-        # it will be a quarter turn multiplied by 1, 2 or 3.
-        # First a single quarter turn
-        if rotate_origin == [0,0]:
-            if rotate==1:
-                return [
-                    [triangle[0][1] * -1, triangle[0][0] * 1],
-                    [triangle[1][1] * -1, triangle[1][0] * 1],
-                    [triangle[2][1] * -1, triangle[2][0] * 1]
-                    ]
-            elif rotate==2:
-                return self.rotate_triangle(self.rotate_triangle(triangle, 1, rotate_origin), 1, rotate_origin)
-            elif rotate==3:
-                return self.rotate_triangle(self.rotate_triangle(triangle, 1, rotate_origin), 2, rotate_origin)
-            else:
-                # do nothing; probably this should be flagged in a log
-                return triangle
-        else:
-            # translate the object to the origin by inverting the rotate rotate_origin
-            # rotate around the origin
-            # translate the object back to it's position by undoing the previous translattion
-            return self.translate_triangle(self.rotate_triangle(self.translate_triangle(triangle, [-rotate_origin[0], -rotate_origin[1]]), rotate), rotate_origin)
 
     def reflect_triangle(self, triangle, offset=0, axis='X'):
         if axis == 'X' or axis == 'x':
@@ -143,10 +117,8 @@ class Application(tk.Frame):
 
         if N == 1:
             self.canvas.delete("all")
-
             T = self.dilate_triangle(self.unit_triangle(), initial_size)
             T = self.translate_triangle(T, [self.canvas_centre[0]*1.5, self.canvas_centre[1]])
-            self.render_triangle(T)
         else:
             T=self.recursive_construction(N-1, size, initial_size_scalar)
             if N % 2 == 0:  #even
@@ -155,8 +127,7 @@ class Application(tk.Frame):
             else: #odd
                 T = self.dilate_triangle(T, dilation_factor, T[2])
                 T = self.reflect_triangle(T, offset=T[2][0], axis='Y')
-            self.render_triangle(T)
-        # Notice that in the base case, the returned value is not processed.
+        self.render_triangle(T)
         return T
 
     def response(self, event):
