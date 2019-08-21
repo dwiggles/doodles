@@ -15,7 +15,7 @@ class Application(tk.Frame):
     slider_dilation_denominator=2
 
     slider_initital_size_start= 1
-    slider_initial_size_end = 130
+    slider_initial_size_end = 300
     slider_initial_size_length=slider_initial_size_end-slider_initital_size_start
 
     slider_N_tiles_start= 1
@@ -57,8 +57,6 @@ class Application(tk.Frame):
         self.slider_N_tiles.pack()
 
     def render_tile(self, tile):
-        print(tile)
-        #self.canvas.create_polygon(tile, outline='#f11', fill='#1f1', width=2)
         self.canvas.create_polygon(tile, outline='#000', fill='#888', width=1)
 
     def translate_tile(self, tile, translation=[0,0]):
@@ -98,8 +96,8 @@ class Application(tk.Frame):
         if V == 4:
             A = [0, 0]
             B = [1, 0]
-            C = [0, 1]
-            D = [1, 1]
+            C = [1, 1]
+            D = [0, 1]
         return  A + B + C + D
 
     def recursive_construction(self, N, size, initial_size_scalar):
@@ -108,7 +106,7 @@ class Application(tk.Frame):
 
         if N == 1:
             self.canvas.delete("all")
-            T = self.dilate_tile(self.unit_tile(3), initial_size)
+            T = self.dilate_tile(self.unit_tile(4), initial_size)
             T = self.translate_tile(T, [self.canvas_centre[0], self.canvas_centre[1]])
         else:
             T=self.recursive_construction(N-1, size, initial_size_scalar)
@@ -116,8 +114,8 @@ class Application(tk.Frame):
                 T = self.dilate_tile(T, dilation_factor, [T[2],T[3]])
                 T = self.reflect_tile(T, offset=T[3], axis='X')
             else: #odd
-                T = self.dilate_tile(T, dilation_factor, [T[4],T[5]])
-                T = self.reflect_tile(T, offset=T[4], axis='Y')
+                T = self.dilate_tile(T, dilation_factor, [T[-2],T[-1]])
+                T = self.reflect_tile(T, offset=T[-2], axis='Y')
         self.render_tile(T)
         return T
 
