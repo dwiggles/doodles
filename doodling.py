@@ -1,6 +1,6 @@
 #!/usr/local/bin/python3
 import tkinter as tk
-import random as rnd
+from math import sin, cos
 
 class Application(tk.Frame):
 
@@ -98,7 +98,19 @@ class Application(tk.Frame):
             B = [1, 0]
             C = [1, 1]
             D = [0, 1]
-        return  A + B + C + D
+            return  A + B + C + D
+        if V == 5:
+            A = [0, 0]
+            B = [1, 0]
+            # The angle is 180 less 108, ie 72
+            dx = cos(3.1415926838*72/180)
+            dy = sin(3.1415926838*72/180)
+            C = [1 + dx , 0 + dy]
+            E = [0 - dx, 0 + dy]
+            dx = cos(3.1415926838*36/180)
+            dy = sin(3.1415926838*36/180)
+            D = [E[0] + dx, E[1] + dy]
+            return  A + B + C + D + E
 
     def recursive_construction(self, N, size, initial_size_scalar):
         initial_size = [initial_size_scalar, initial_size_scalar]
@@ -106,7 +118,7 @@ class Application(tk.Frame):
 
         if N == 1:
             self.canvas.delete("all")
-            T = self.dilate_tile(self.unit_tile(4), initial_size)
+            T = self.dilate_tile(self.unit_tile(5), initial_size)
             T = self.translate_tile(T, [self.canvas_centre[0], self.canvas_centre[1]])
         else:
             T=self.recursive_construction(N-1, size, initial_size_scalar)
