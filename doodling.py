@@ -1,6 +1,7 @@
 #!/usr/local/bin/python3
 import tkinter as tk
-from math import sin, cos
+from math import sin, cos, pi
+import numpy as np
 
 class Application(tk.Frame):
 
@@ -19,7 +20,7 @@ class Application(tk.Frame):
     slider_initial_size_length=slider_initial_size_end-slider_initital_size_start
 
     slider_N_tiles_start= 1
-    slider_N_tiles_end = 20
+    slider_N_tiles_end = 90
     slider_N_tiles_length=slider_N_tiles_end-slider_N_tiles_start
 
     def __init__(self, master=None):
@@ -62,6 +63,8 @@ class Application(tk.Frame):
     def translate_tile(self, tile, translation=[0,0]):
         tile[0::2] = [x + translation[0] for x in tile[0::2]]
         tile[1::2] = [x + translation[1] for x in tile[1::2]]
+        #tile[0::2] = [x + translation[0] for x in tile[0::2]]
+        #tile[1::2] = [x + translation[1] for x in tile[1::2]]
         return tile
 
     def dilate_tile(self, tile, dilation=[1,1], dilate_origin=[0,0]):
@@ -71,6 +74,31 @@ class Application(tk.Frame):
             return tile
         else:
             return self.translate_tile(self.dilate_tile(self.translate_tile(tile, [-dilate_origin[0], -dilate_origin[1]]), dilation), dilate_origin)
+
+    def rotate_tile(self, tile, rotate=0, rotate_origin=[0,0]):
+        # rotate it -- around the origin (Modify this to rotate around any specified point)
+        # this will be no "general" rotation, but instead it will be specifically a quarter turn
+        # it will be a quarter turn multiplied by 1, 2 or 3.
+        # First a single quarter turn
+        # Recall the generalized rotation,
+        # R = | cos(t) -sin(t) |
+        #     | sin(t)  cos(t) |
+        c=cos(rotate)
+        s=sin(rotate)
+        R = np.array([[c, -s], [s, c]])
+        #T = np.transpose(np.array([tile[0::2], tile[1::2]]))
+        T=tile
+        if rotate_origin == [0,0]:
+            # rotate each point -- but to execute matmul, the data must be structred into x,y arrays.
+            T = [[np.matmul(t,R)  for t in [T[x:x+2] for x in range(0,len(T),2)]][i] for i in range(int(len(T)/2))]
+            # Now undo the work of structuring the data into x,y arrays... convert back to a staight up list
+            T = [T[i][j].tolist() for i in range(len(T)) for j in range(len(T[0]))]
+            return T
+        else:
+            # translate the object to the origin by inverting the rotate rotate_origin
+            # rotate around the origin
+            # translate the object back to it's position by undoing the previous translattion
+            return self.translate_tile(self.rotate_tile(self.translate_tile(tile, [-rotate_origin[0], -rotate_origin[1]]), rotate), rotate_origin)
 
     def reflect_tile(self, tile, offset=0, axis='X'):
         if axis == 'X' or axis == 'x':
@@ -103,31 +131,27 @@ class Application(tk.Frame):
             A = [0, 0]
             B = [1, 0]
             # The angle is 180 less 108, ie 72
-            dx = cos(3.1415926838*72/180)
-            dy = sin(3.1415926838*72/180)
+            dx = cos(pi*72/180)
+            dy = sin(pi*72/180)
             C = [1 + dx , 0 + dy]
             E = [0 - dx, 0 + dy]
-            dx = cos(3.1415926838*36/180)
-            dy = sin(3.1415926838*36/180)
+            dx = cos(pi*36/180)
+            dy = sin(pi*36/180)
             D = [E[0] + dx, E[1] + dy]
             return  A + B + C + D + E
 
     def recursive_construction(self, N, size, initial_size_scalar):
         initial_size = [initial_size_scalar, initial_size_scalar]
         dilation_factor = [(size/(self.slider_dilation_length/self.slider_dilation_denominator)), (size/(self.slider_dilation_length/self.slider_dilation_denominator))]
-
         if N == 1:
             self.canvas.delete("all")
             T = self.dilate_tile(self.unit_tile(5), initial_size)
             T = self.translate_tile(T, [self.canvas_centre[0], self.canvas_centre[1]])
+            T = self.rotate_tile(T, rotate=2*3.1415926838/len(T), rotate_origin=[sum(T[0::2])/len(T)*2,sum(T[1::2])/len(T)*2])
         else:
             T=self.recursive_construction(N-1, size, initial_size_scalar)
-            if N % 2 == 0:  #even
-                T = self.dilate_tile(T, dilation_factor, [T[2],T[3]])
-                T = self.reflect_tile(T, offset=T[3], axis='X')
-            else: #odd
-                T = self.dilate_tile(T, dilation_factor, [T[-2],T[-1]])
-                T = self.reflect_tile(T, offset=T[-2], axis='Y')
+            T = self.rotate_tile(T[2::]+T[0:2], rotate=2*3.1415926838/len(T), rotate_origin=[T[0],T[1]])
+            T = self.dilate_tile(T,dilation_factor, [T[0],T[1]])
         self.render_tile(T)
         return T
 
