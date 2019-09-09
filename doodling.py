@@ -69,8 +69,6 @@ class Application(tk.Frame):
 
     def render_tile(self, tile, skin):
         self.canvas.create_polygon(tile, outline='#000', fill=skin, width=1)
-        #self.canvas.create_polygon(tile, outline='#000', fill='#888', width=1)
-        #self.canvas.create_polygon(tile, outline='#000', fill='', width=1)
 
     def translate_tile(self, tile, translation=[0,0]):
         tile[0::2] = [x + translation[0] for x in tile[0::2]]
@@ -86,17 +84,12 @@ class Application(tk.Frame):
             return self.translate_tile(self.dilate_tile(self.translate_tile(tile, [-dilate_origin[0], -dilate_origin[1]]), dilation), dilate_origin)
 
     def rotate_tile(self, tile, rotate=0, rotate_origin=[0,0]):
-        # rotate it -- around the origin (Modify this to rotate around any specified point)
-        # this will be no "general" rotation, but instead it will be specifically a quarter turn
-        # it will be a quarter turn multiplied by 1, 2 or 3.
-        # First a single quarter turn
         # Recall the generalized rotation,
         # R = | cos(t) -sin(t) |
         #     | sin(t)  cos(t) |
         c=cos(rotate)
         s=sin(rotate)
         R = np.array([[c, -s], [s, c]])
-        #T = np.transpose(np.array([tile[0::2], tile[1::2]]))
         T=tile
         if rotate_origin == [0,0]:
             # rotate each point -- but to execute matmul, the data must be structred into x,y arrays.
@@ -107,18 +100,16 @@ class Application(tk.Frame):
         else:
             # translate the object to the origin by inverting the rotate rotate_origin
             # rotate around the origin
-            # translate the object back to it's position by undoing the previous translattion
+            # translate the object back to it's position by undoing the previous translation
             return self.translate_tile(self.rotate_tile(self.translate_tile(tile, [-rotate_origin[0], -rotate_origin[1]]), rotate), rotate_origin)
 
     def reflect_tile(self, tile, offset=0, axis='X'):
         if axis == 'X' or axis == 'x':
             tile = self.translate_tile(tile, [0,-offset])
-            #tile = self.dilate_tile(tile, [1,-1], dilate_origin=[0,-offset])
             tile[1::2] = [x * -1 for x in tile[1::2]]
             tile = self.translate_tile(tile, [0,offset])
         else: # Assume "Y" intead
             tile = self.translate_tile(tile, [-offset,0])
-            #tile = self.dilate_tile(tile, [-1,1], dilate_origin=[-offset,0])
             tile[0::2] = [x * -1 for x in tile[0::2]]
             tile = self.translate_tile(tile, [offset,0])
         return tile
@@ -174,10 +165,8 @@ class Application(tk.Frame):
             self.render_tile(T, skin='#F00')
         else:
             T=self.recursive_construction(N-1, size, rotate, initial_size_scalar)
-            #T = self.rotate_tile(T[2::]+T[0:2], rotate=+2*3.1415926838/len(T), rotate_origin=[T[0],T[1]])
-            #T = self.rotate_tile(T[2::]+T[0:2], rotate=rotate, rotate_origin=[T[0],T[1]])
             T = self.rotate_tile(T[4::]+T[0:4], rotate=rotate, rotate_origin=[T[4],T[5]])
-            T = self.dilate_tile(T,dilation_factor, [T[0],T[1]])
+            T = self.dilate_tile(T, dilation_factor, [T[0],T[1]])
             self.render_tile(T, skin='#00F')
         return T
 
