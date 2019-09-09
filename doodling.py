@@ -67,8 +67,9 @@ class Application(tk.Frame):
         self.slider_initial_size.pack()
         self.slider_N_tiles.pack()
 
-    def render_tile(self, tile):
-        self.canvas.create_polygon(tile, outline='#000', fill='#888', width=1)
+    def render_tile(self, tile, skin):
+        self.canvas.create_polygon(tile, outline='#000', fill=skin, width=1)
+        #self.canvas.create_polygon(tile, outline='#000', fill='#888', width=1)
         #self.canvas.create_polygon(tile, outline='#000', fill='', width=1)
 
     def translate_tile(self, tile, translation=[0,0]):
@@ -167,16 +168,17 @@ class Application(tk.Frame):
         dilation_factor = [(size/(self.slider_dilation_length/self.slider_dilation_denominator)), (size/(self.slider_dilation_length/self.slider_dilation_denominator))]
         if N == 1:
             self.canvas.delete("all")
-            T = self.dilate_tile(self.unit_tile(4), initial_size)
+            T = self.dilate_tile(self.unit_tile(5), initial_size)
             T = self.translate_tile(T, [self.canvas_centre[0], self.canvas_centre[1]])
             T = self.rotate_tile(T, rotate=2*3.1415926838/len(T), rotate_origin=[sum(T[0::2])/len(T)*2,sum(T[1::2])/len(T)*2])
+            self.render_tile(T, skin='#F00')
         else:
             T=self.recursive_construction(N-1, size, rotate, initial_size_scalar)
             #T = self.rotate_tile(T[2::]+T[0:2], rotate=+2*3.1415926838/len(T), rotate_origin=[T[0],T[1]])
             #T = self.rotate_tile(T[2::]+T[0:2], rotate=rotate, rotate_origin=[T[0],T[1]])
             T = self.rotate_tile(T[4::]+T[0:4], rotate=rotate, rotate_origin=[T[4],T[5]])
             T = self.dilate_tile(T,dilation_factor, [T[0],T[1]])
-        self.render_tile(T)
+            self.render_tile(T, skin='#00F')
         return T
 
     def response(self, event):
