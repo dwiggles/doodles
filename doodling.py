@@ -144,7 +144,7 @@ class Application(tk.Frame):
             D = [0, 1]
             return  A + B + C + D
 
-        if V == 5:
+        if V == 9:
             A = [0, 0]
             B = [1, 0]
             # The angle is 180 less 108, ie 72
@@ -188,6 +188,27 @@ class Application(tk.Frame):
             E = [D[0] + dx, D[1] + dy]
             return A + B + C + D + E + F + G
 
+        #if V == 20:
+        if V == 5:
+            A = [0, 0]
+            B = [1, 0]
+            # The angle is 180 less 108, ie 72
+            dx = cos(pi*(180-108)/180)
+            dy = sin(pi*(180-108)/180)
+            C = [1 + dx , 0 + dy]
+            E = [0 - dx, 0 + dy]
+            dx = cos(pi*(180-2*108)/180)
+            dy = sin(pi*(180-2*108)/180)
+            D = [E[0] + dx, E[1] - dy]
+
+            return A + C + E + B + D
+            """
+                A + B + C + D +
+                E + F + G + H +
+                I + J + K + L +
+                M + N + O + P +
+                Q + S + T + U
+            """
         # Could return any old shape, really. Like this one:
         if V == 2:
                 A = [0, 0]
