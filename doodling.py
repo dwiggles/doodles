@@ -1,12 +1,14 @@
 #!/usr/local/bin/python3
 import tkinter as tk
-from math import sin, cos, pi
+from math import sin, cos, pi 
 import numpy as np
 
 class Application(tk.Frame):
 
-    canvas_width=900
-    canvas_height=400
+    canvas_width=1600
+    canvas_height=800
+    #canvas_width=800
+    #canvas_height=400
     canvas_centre = [canvas_width/2, canvas_height/2]
 
     slider_dilation_start = 0
@@ -27,7 +29,7 @@ class Application(tk.Frame):
     slider_tile_type_end=7
 
     slider_N_tiles_start= 1
-    slider_N_tiles_end = 90
+    slider_N_tiles_end = 499
     slider_N_tiles_length=slider_N_tiles_end-slider_N_tiles_start
 
     def __init__(self, master=None):
@@ -70,11 +72,11 @@ class Application(tk.Frame):
 
         self.quitButton.pack()
         self.slider_tile_type.pack(side="left")
-        self.canvas.pack()
-        self.slider_dilation.pack()
-        self.slider_rotation.pack()
-        self.slider_initial_size.pack()
-        self.slider_N_tiles.pack()
+        self.slider_dilation.pack(side="top")
+        self.slider_rotation.pack(side="top")
+        self.slider_initial_size.pack(side="top")
+        self.slider_N_tiles.pack(side="top")
+        self.canvas.pack(side="top")
 
     def render_tile(self, tile, skin):
         self.canvas.create_polygon(tile, outline='#000', fill=skin, width=1)
@@ -186,7 +188,10 @@ class Application(tk.Frame):
             dx = cos(pi*(180-3*900/7)/180)
             dy = sin(pi*(180-3*900/7)/180)
             E = [D[0] + dx, D[1] + dy]
-            return A + B + C + D + E + F + G
+            # Heptagon
+            #return A + B + C + D + E + F + G
+            # Heptagram
+            return A + C + E + G + B + D + F
 
         #if V == 20:
         if V == 5:
