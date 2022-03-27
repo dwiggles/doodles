@@ -28,6 +28,12 @@ class Application(tk.Frame):
     slider_tile_type_start=2
     slider_tile_type_end=7
 
+    slider_posy_start=0
+    slider_posy_end=canvas_height
+
+    slider_posx_start=0
+    slider_posx_end=canvas_width
+
     slider_N_tiles_start= 1
     slider_N_tiles_end = 499
     slider_N_tiles_length=slider_N_tiles_end-slider_N_tiles_start
@@ -36,7 +42,7 @@ class Application(tk.Frame):
         super(Application, self).__init__(master)
         self.pack()
         self.createWidgets()
-        self.recursive_construction(N=2, size=1, rotate=pi, initial_size_scalar=50, tile_type=4)
+        self.recursive_construction(N=2, size=1, rotate=pi, initial_size_scalar=50, tile_type=4, posx=0, posy=0)
 
     def createWidgets(self):
         self.canvas = tk.Canvas(self,width=self.canvas_width, height=self.canvas_height)
@@ -65,12 +71,24 @@ class Application(tk.Frame):
         self.slider_tile_type.bind("<B1-Motion>", self.response)
         self.slider_tile_type.bind("<ButtonRelease-1>", self.response)
 
+        self.slider_posy= tk.Scale(self, from_=self.slider_posy_start, to=self.slider_posy_end, orient="vertical", length=self.canvas_width*0.5, label="y")
+        self.slider_posy.set(0)
+        self.slider_posy.bind("<B1-Motion>", self.response)
+        self.slider_posy.bind("<ButtonRelease-1>", self.response)
+
+        self.slider_posx= tk.Scale(self, from_=self.slider_posx_start, to=self.slider_posx_end, orient="horizontal", length=self.canvas_width*0.5, label="x")
+        self.slider_posx.set(0)
+        self.slider_posx.bind("<B1-Motion>", self.response)
+        self.slider_posx.bind("<ButtonRelease-1>", self.response)
+
         self.slider_N_tiles = tk.Scale(self, from_=self.slider_initital_size_start, to=self.slider_N_tiles_end, orient="horizontal", length=self.canvas_width*0.5, label="N")
         self.slider_N_tiles.set(2)
         self.slider_N_tiles.bind("<B1-Motion>", self.response)
         self.slider_N_tiles.bind("<ButtonRelease-1>", self.response)
 
         self.quitButton.pack()
+        self.slider_posy.pack(side="left")
+        self.slider_posx.pack(side="top")
         self.slider_tile_type.pack(side="left")
         self.slider_dilation.pack(side="top")
         self.slider_rotation.pack(side="top")
@@ -226,17 +244,17 @@ class Application(tk.Frame):
                 E = [B[0] - dx , B[1] - dy]
                 return  A + E + B + C + D
 
-    def recursive_construction(self, N, size, rotate, initial_size_scalar, tile_type):
+    def recursive_construction(self, N, size, rotate, initial_size_scalar, tile_type, posx, posy):
         initial_size = [initial_size_scalar, initial_size_scalar]
         dilation_factor = [(size/(self.slider_dilation_length/self.slider_dilation_denominator)), (size/(self.slider_dilation_length/self.slider_dilation_denominator))]
         if N == 1:
             self.canvas.delete("all")
             T = self.dilate_tile(self.unit_tile(tile_type), initial_size)
-            T = self.translate_tile(T, [self.canvas_centre[0], self.canvas_centre[1]])
+            T = self.translate_tile(T, [self.canvas_centre[0]-posx, self.canvas_centre[1]-posy])
             # render a red tile (ie skin = '#F00')
             self.render_tile(T, skin='#F00')
         else:
-            T = self.recursive_construction(N-1, size, rotate, initial_size_scalar, tile_type)
+            T = self.recursive_construction(N-1, size, rotate, initial_size_scalar, tile_type, posx, posy)
             T = self.rotate_tile(T[4::]+T[0:4], rotate=rotate, rotate_origin=[T[4],T[5]])
             T = self.dilate_tile(T, dilation_factor, [T[0],T[1]])
             # render a blue tile (ie skin = '#F00')
@@ -248,8 +266,10 @@ class Application(tk.Frame):
         rotate = self.slider_rotation.get()
         initial_size_scalar = self.slider_initial_size.get()
         tile_type = self.slider_tile_type.get()
+        posx = self.slider_posx.get()
+        posy = self.slider_posy.get()
         N_tiles = self.slider_N_tiles.get()
-        self.recursive_construction(N_tiles, size, rotate, initial_size_scalar, tile_type)
+        self.recursive_construction(N_tiles, size, rotate, initial_size_scalar, tile_type, posx, posy)
 
 app=Application()
 app.master.title('Doodling')
